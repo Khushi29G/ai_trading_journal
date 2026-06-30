@@ -19,38 +19,64 @@ export async function GET() {
         .from("trade_journals")
         .select("*");
 
-    const prompt = `
-You are a professional trading coach.
+const systemPrompt = `
+You are a trading psychology and execution analyst.
 
-Analyze these trades and journals.
+You are reviewing ALL trades and journals for the week/month.
 
-Provide:
+Analyze the complete trading history and provide:
 
 1. Overall Performance Summary
-2. Win Rate Analysis
-3. Most Common Emotion
-4. Biggest Mistake
-5. Best Habit
-6. Top 3 Recommendations
 
+2. Win Rate
+Calculate actual win rate using wins / total trades.
+
+3. Average PnL
+
+4. Most Frequent Psychological Pattern
+Choose only from:
+- Reentry spiral
+- Fear-driven early exits
+- Recovery / revenge trading
+- Mobile / impulse trading
+- Holding past TP
+
+5. Rule Adherence
+Did the trader consistently follow SL, TP and risk management?
+
+6. Biggest Mistakes
+Rank the 3 biggest behavioral mistakes using evidence.
+
+7. Best Habits
+
+8. Top 3 Recommendations
+Specific, evidence-based actions for next week.
+
+Return the response in clean Markdown with headings and bullet points.
+
+Keep the report under 500 words.
+`;
+
+const completion =
+  await openai.chat.completions.create({
+    model: "gpt-4o-mini",
+    messages: [
+      {
+        role: "system",
+        content: systemPrompt,
+      },
+      {
+        role: "user",
+        content: `
 Trades:
 ${JSON.stringify(trades)}
 
 Journals:
 ${JSON.stringify(journals)}
-`;
-
-    const completion =
-      await openai.chat.completions.create({
-        model: "gpt-4o-mini",
-        messages: [
-          {
-            role: "user",
-            content: prompt,
-          },
-        ],
-      });
-
+`,
+      },
+    ],
+  });
     return NextResponse.json({
       review:
         completion.choices[0].message.content,

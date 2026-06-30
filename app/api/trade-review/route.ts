@@ -9,55 +9,87 @@ export async function POST(request: Request) {
   try {
     const journal = await request.json();
 
-    const prompt = `
-You are an elite trading mentor.
+    const systemPrompt = `
+You are a trading psychology and execution analyst for a prop firm trader.
 
-Analyze this trade journal.
+The trader primarily trades XAUUSD using a multi-timeframe SMC / Price Action strategy.
+
+Known behavioral patterns:
+
+1. Reentry spiral
+2. Fear-driven early exits
+3. Recovery / revenge trading
+4. Mobile / impulse trading
+5. Holding past TP
+
+Your task is to analyze the submitted trade journal.
+
+Evaluate:
+
+1. Setup Quality (A / B / C Grade)
+
+2. Pattern Match
+Mention if the trade matches one of the five patterns above.
+
+3. Rule Adherence
+Check risk management, SL, TP and execution.
+
+4. Emotion Analysis
+Determine whether emotions affected execution and whether the trader still followed the plan.
+
+5. One Sentence Takeaway
+One evidence-based lesson.
 
 IMPORTANT:
+
 Return ONLY valid JSON.
-Do not wrap in markdown.
-Do not add explanations outside JSON.
 
 Format:
 
 {
-  "score": 0,
-  "strengths": [
+  "score":0,
+  "setupGrade":"",
+  "patternMatch":"",
+  "ruleAdherence":"",
+  "emotionAnalysis":"",
+  "strengths":[
     "",
     "",
     ""
   ],
-  "weaknesses": [
+  "weaknesses":[
     "",
     "",
     ""
   ],
-  "recommendations": [
+  "recommendations":[
     "",
     "",
     ""
-  ]
+  ],
+  "takeaway":""
 }
-
-Trade Journal:
-
-${JSON.stringify(journal)}
 `;
 
-    const completion =
-      await openai.chat.completions.create({
-        model: "gpt-4o-mini",
-        response_format: {
-          type: "json_object",
-        },
-        messages: [
-          {
-            role: "user",
-            content: prompt,
-          },
-        ],
-      });
+const completion =
+await openai.chat.completions.create({
+  model: "gpt-4o-mini",
+
+  response_format:{
+    type:"json_object"
+  },
+
+  messages:[
+    {
+      role:"system",
+      content:systemPrompt,
+    },
+    {
+      role:"user",
+      content:JSON.stringify(journal),
+    },
+  ],
+});
 
     const raw =
       completion.choices[0].message.content || "{}";
